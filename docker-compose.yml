@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  # 1. Persistence Layer
+  postgres:
+    image: postgres:15-alpine
+    container_name: job_system_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: job_queue
+    ports:
+      - "5433:5432"
+
+  # 2. Queue Layer
+  redis:
+    image: redis:7-alpine
+    container_name: job_system_queue
+    ports:
+      - "6380:6379"
