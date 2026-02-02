@@ -1,19 +1,38 @@
 version: '3.8'
+
 services:
-  # 1. Persistence Layer
+  # 1. Database Service (PostgreSQL)
   postgres:
     image: postgres:15-alpine
     container_name: job_system_db
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: job_queue
     ports:
-      - "5433:5432"
+      - "${DB_PORT}:5432" # Maps localhost:5432 -> container:5432
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Persists data even if container restarts
+    networks:
+      - job_net
 
-  # 2. Queue Layer
+  # 2. Queue Service (Redis)
   redis:
     image: redis:7-alpine
     container_name: job_system_queue
     ports:
-      - "6380:6379"
+      - "${REDIS_PORT}:6379" # Maps localhost:6379 -> container:6379
+    volumes:
+      - redis_data:/data
+    networks:
+      - job_net
+
+# Define volumes for persistence
+volumes:
+  postgres_data:
+  redis_data:
+
+    # Define a shared network
+networks:
+  job_net:
+    driver: bridge
