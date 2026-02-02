@@ -6,6 +6,13 @@ export enum HttpStatusCode {
     INTERNAL_SERVER_ERROR = 500,
 }
 
+export enum JobStatus {
+    PENDING = 'pending',
+    PROCESSING = 'processing',
+    COMPLETED = 'completed',
+    FAILED = 'failed'
+}
+
 export const MESSAGES = {
     DEFAULT_ERROR: "Something went wrong.",
     DEFAULT_SUCCESS: "Operation successful.",
