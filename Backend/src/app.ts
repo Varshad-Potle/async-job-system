@@ -12,8 +12,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 2. Routes (Placeholder)
-// import jobRoutes from './routes/job.routes';
-// app.use("/api/v1/jobs", jobRoutes);
+import jobRoutes from './routes/job.routes';
+app.use("/api/v1/jobs", jobRoutes);
 
 // 3. Health Check
 app.get("/health", (req, res) => {

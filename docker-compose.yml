@@ -4,6 +4,7 @@ services:
   # 1. Database Service (PostgreSQL)
   postgres:
     image: postgres:15-alpine
+    restart: always
     container_name: job_system_db
     ports:
       - "${DB_PORT}:5432" # Maps localhost:5432 -> container:5432
@@ -19,6 +20,7 @@ services:
   # 2. Queue Service (Redis)
   redis:
     image: redis:7-alpine
+    restart: always
     container_name: job_system_queue
     ports:
       - "${REDIS_PORT}:6379" # Maps localhost:6379 -> container:6379
