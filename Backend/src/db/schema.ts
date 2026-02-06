@@ -2,8 +2,6 @@ import { query } from './index';
 
 export const initDb = async () => {
 
-  await query("DROP TABLE IF EXISTS jobs");
-
   const createTableQuery = `
     CREATE TABLE IF NOT EXISTS jobs (
       id SERIAL PRIMARY KEY,
