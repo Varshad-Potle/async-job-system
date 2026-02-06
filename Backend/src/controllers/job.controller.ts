@@ -3,7 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import pool from "../db";
-import redisClient from "../db/redis";
+import { redisClient } from "../db/redis";
 import { JobStatus, HttpStatusCode } from "../constants";
 
 export const createJob = asyncHandler(async (req: Request, res: Response) => {
