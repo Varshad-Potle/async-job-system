@@ -11,7 +11,8 @@ export enum JobStatus {
     PROCESSING = 'processing',
     COMPLETED = 'completed',
     FAILED = 'failed',
-    RETRYING = 'retrying'
+    RETRYING = 'retrying',
+    DEAD = 'dead'
 }
 
 export const MESSAGES = {

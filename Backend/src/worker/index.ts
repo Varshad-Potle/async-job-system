@@ -11,19 +11,24 @@ const calculateBackoff = (attempts: number) => {
 async function recoverStuckJobs() {
     console.log("Worker starting: Checking for stuck jobs...");
 
-    // Find jobs that are stuck in RETRYING past their due date OR stuck in PROCESSING for too long
     const query = `
         SELECT id FROM jobs 
         WHERE (status = $1 AND next_run_at <= NOW())
-        OR (status = $2 AND updated_at < NOW() - INTERVAL '5 minutes')
+        OR (status = $2 AND processing_started_at < NOW() - INTERVAL '10 minutes')
     `;
 
     const { rows } = await pool.query(query, [JobStatus.RETRYING, JobStatus.PROCESSING]);
 
     for (const job of rows) {
         console.log(`Recovering Stuck Job #${job.id}`);
+
         // Resetting status from RETRYING or PROCESSING to PENDING and push to queue again
-        await pool.query("UPDATE jobs SET status = $1, updated_at = NOW() WHERE id = $2", [JobStatus.PENDING, job.id]);
+        await pool.query(
+            "UPDATE jobs SET status = $1, updated_at = NOW(), processing_started_at = NULL WHERE id = $2",
+            [JobStatus.PENDING, job.id]
+        );
+
+        // Push back to the main queue
         await redisClient.lpush("job_queue", job.id);
     }
 
@@ -52,27 +57,31 @@ async function handleFailure(jobId: string, attempts: number, maxAttempts: numbe
                 console.log(`Re-queueing Job #${jobId} into Redis.`);
                 await redisClient.lpush("job_queue", jobId);
             } catch (err) {
-                console.error(`Failed to re-queue job #${jobId} inside timeout`, err);
-                // If this fails, the 'recoverStuckJobs' on next restart will catch it.
+                console.error(`Failed to re-queue job #${jobId}`, err);
             }
         }, delay);
 
     } else {
-        console.error(`Job #${jobId} Max Retries Reached. Marking FAILED.`);
+        // no retries left so add to DLQ
+        console.error(`Job #${jobId} died. Moving to DLQ.`);
+
+        // update status to DEAD in DB
         await pool.query(
             "UPDATE jobs SET status = $1, error_message = $2, updated_at = NOW() WHERE id = $3",
-            [JobStatus.FAILED, errorMessage, jobId]
+            [JobStatus.DEAD, errorMessage, jobId]
         );
+
+        // push to DLQ in redis
+        await redisClient.lpush("dead_jobs", jobId);
     }
 }
 
-// job processor
 async function processJob(jobId: string) {
     try {
-        // Atomic increment of attempts prevents race conditions
+        // update job status to processing in DB and set processing_started_at to now
         const jobUpdate = await pool.query(
             `UPDATE jobs 
-             SET status = $1, attempts = attempts + 1, updated_at = NOW() 
+             SET status = $1, attempts = attempts + 1, processing_started_at = NOW(), updated_at = NOW() 
              WHERE id = $2 
              RETURNING attempts, max_attempts`,
             [JobStatus.PROCESSING, jobId]
@@ -107,24 +116,22 @@ async function processJob(jobId: string) {
     }
 }
 
-// worker loop
 export async function startWorker() {
-    await recoverStuckJobs(); // Run safety check on boot
+    // Recover jobs that crashed while the worker was down
+    await recoverStuckJobs();
 
-    console.log("Smart Worker Service Started. Waiting for jobs...");
+    console.log("Smart Worker Started. Waiting for jobs...");
 
     while (true) {
         try {
-            // "0" means block indefinitely until a job arrives
             const response = await redisBlockingClient.brpop("job_queue", 0);
 
             if (response) {
-                const jobId = response[1]; // brpop returns [key, value]
+                const jobId = response[1];
                 await processJob(jobId);
             }
         } catch (error) {
             console.error("Worker Loop Error:", error);
-            // Small delay to prevent CPU spam if Redis goes down
             await new Promise((resolve) => setTimeout(resolve, 1000));
         }
     }
