@@ -29,7 +29,7 @@ async function recoverStuckJobs() {
         );
 
         // Push back to the main queue
-        await redisClient.lpush("job_queue", job.id);
+        await redisClient.lpush("job_queue", String(job.id));
     }
 
     if (rows.length > 0) console.log(`Recovered ${rows.length} jobs.`);
@@ -55,7 +55,7 @@ async function handleFailure(jobId: string, attempts: number, maxAttempts: numbe
         setTimeout(async () => {
             try {
                 console.log(`Re-queueing Job #${jobId} into Redis.`);
-                await redisClient.lpush("job_queue", jobId);
+                await redisClient.lpush("job_queue", String(jobId));
             } catch (err) {
                 console.error(`Failed to re-queue job #${jobId}`, err);
             }
@@ -72,7 +72,7 @@ async function handleFailure(jobId: string, attempts: number, maxAttempts: numbe
         );
 
         // push to DLQ in redis
-        await redisClient.lpush("dead_jobs", jobId);
+        await redisClient.lpush("dead_jobs", String(jobId));
     }
 }
 
