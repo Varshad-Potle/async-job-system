@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 import { app } from "./app";
 import { initDb } from "./db/schema";
-import { startWorker } from "./worker";
 import { redisClient, redisBlockingClient } from "./db/redis";
 import pool from "./db";
 
@@ -18,12 +17,6 @@ const startServer = async () => {
         // Start HTTP Server
         const server = app.listen(PORT, () => {
             console.log(`Server running on http://localhost:${PORT}`);
-        });
-
-        // Start Background Worker
-        // We do NOT await this, so it runs in parallel with the server
-        startWorker().catch(err => {
-            console.error("Worker crashed fatal error:", err);
         });
 
         // Graceful Shutdown Logic
