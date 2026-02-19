@@ -1,13 +1,12 @@
-import Redis from "ioredis";
+import Redis, { RedisOptions } from "ioredis";
 import dotenv from "dotenv";
 import path from "path";
 
 // load env vars from root
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
-const redisConfig = {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379'),
+// Base options needed for worker queue logic
+const baseOptions: RedisOptions = {
     maxRetriesPerRequest: null,
     retryStrategy: (times: number) => {
         const delay = Math.min(times * 50, 2000);
@@ -15,11 +14,23 @@ const redisConfig = {
     }
 };
 
-// General Client (For LPUSH, SET, etc.)
-export const redisClient = new Redis(redisConfig);
+const redisUrl = process.env.REDIS_URL;
 
-// Blocking Client (For BRPOP only)
-export const redisBlockingClient = new Redis(redisConfig);
+export const redisClient = redisUrl
+    ? new Redis(redisUrl, baseOptions)
+    : new Redis({
+        host: process.env.REDIS_HOST || 'localhost',
+        port: parseInt(process.env.REDIS_PORT || '6379'),
+        ...baseOptions
+    });
+
+export const redisBlockingClient = redisUrl
+    ? new Redis(redisUrl, baseOptions)
+    : new Redis({
+        host: process.env.REDIS_HOST || 'localhost',
+        port: parseInt(process.env.REDIS_PORT || '6379'),
+        ...baseOptions
+    });
 
 redisClient.on('connect', () => console.log('Redis General Client Connected'));
 redisBlockingClient.on('connect', () => console.log('Redis Blocking Client Connected'));
