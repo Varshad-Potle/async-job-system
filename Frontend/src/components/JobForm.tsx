@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, Zap, AlertTriangle } from 'lucide-react';
+import { Send, Zap } from 'lucide-react';
 import { api } from '../services/api';
 
 export const JobForm: React.FC<{ onJobAdded: () => void }> = ({ onJobAdded }) => {
