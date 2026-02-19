@@ -78,12 +78,12 @@ async function handleFailure(jobId: string, attempts: number, maxAttempts: numbe
 
 async function processJob(jobId: string) {
     try {
-        // update job status to processing in DB and set processing_started_at to now
+        // Fetch job data including payload to check for simulateFailure flag
         const jobUpdate = await pool.query(
             `UPDATE jobs 
              SET status = $1, attempts = attempts + 1, processing_started_at = NOW(), updated_at = NOW() 
              WHERE id = $2 
-             RETURNING attempts, max_attempts`,
+             RETURNING attempts, max_attempts, payload`,
             [JobStatus.PROCESSING, jobId]
         );
 
@@ -92,11 +92,19 @@ async function processJob(jobId: string) {
             return;
         }
 
-        const { attempts, max_attempts } = jobUpdate.rows[0];
+        const { attempts, max_attempts, payload } = jobUpdate.rows[0];
         console.log(`Starting Job #${jobId} (Attempt ${attempts}/${max_attempts})...`);
 
         // --- SIMULATED WORK ---
-        if (Math.random() < 0.5) throw new Error("Simulated Random API Failure!");
+        // Check if the frontend requested a simulated failure (probabilistic)
+        if (payload?.data?.simulateFailure === true) {
+            // 70% chance to fail - allows job to potentially succeed on retry
+            if (Math.random() < 0.7) {
+                throw new Error("Simulated Failure (requested by user)");
+            }
+        }
+
+        // Simulate actual work (e.g., sending email)
         await new Promise((resolve) => setTimeout(resolve, 2000));
         // -------------------------
 

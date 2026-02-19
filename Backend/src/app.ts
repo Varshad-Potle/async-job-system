@@ -11,6 +11,11 @@ app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true
+}));
+
 // 2. Routes (Placeholder)
 import jobRoutes from './routes/job.routes';
 app.use("/api/v1/jobs", jobRoutes);

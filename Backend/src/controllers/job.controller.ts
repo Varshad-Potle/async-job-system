@@ -115,3 +115,64 @@ export const getDeadJobs = asyncHandler(async (req: Request, res: Response) => {
         new ApiResponse(HttpStatusCode.OK, result.rows, "Dead jobs retrieved successfully")
     );
 });
+
+export const getJobStats = asyncHandler(async (req: Request, res: Response) => {
+    // Count jobs grouped by status
+    const result = await pool.query(`
+        SELECT status, COUNT(*)::int as count 
+        FROM jobs 
+        GROUP BY status
+    `);
+
+    // Initialize default stats
+    const stats: any = {
+        pending: 0,
+        processing: 0,
+        completed: 0,
+        failed: 0,
+        retrying: 0,
+        dead: 0
+    };
+
+    // Map DB results to stats object
+    result.rows.forEach((row: any) => {
+        // Convert status to lowercase just in case DB stores it differently
+        const statusKey = row.status.toLowerCase();
+        if (stats[statusKey] !== undefined) {
+            stats[statusKey] = row.count;
+        }
+    });
+
+    // Combine 'dead' and 'failed' for the frontend DLQ display
+    // The frontend expects 'failed' to represent all DLQ jobs
+    stats.failed = stats.dead + stats.failed;
+
+    res.status(HttpStatusCode.OK).json(
+        new ApiResponse(HttpStatusCode.OK, stats, "Stats fetched successfully")
+    );
+});
+
+export const getAllJobs = asyncHandler(async (req: Request, res: Response) => {
+    // Fetch latest 50 jobs
+    const result = await pool.query(`
+        SELECT * FROM jobs 
+        ORDER BY created_at DESC 
+        LIMIT 50
+    `);
+
+    // Map DB columns to Frontend expected format
+    const jobs = result.rows.map((row: any) => ({
+        id: row.id,
+        // Extract type from payload if it exists, otherwise default
+        type: row.payload?.type || "unknown",
+        data: row.payload?.data || {},
+        status: row.status,
+        attempts: row.attempts,
+        createdAt: row.created_at,
+        processedAt: row.processing_started_at // using your schema column
+    }));
+
+    res.status(HttpStatusCode.OK).json(
+        new ApiResponse(HttpStatusCode.OK, jobs, "Jobs fetched successfully")
+    );
+});
