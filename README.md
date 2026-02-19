@@ -4,7 +4,13 @@ A robust, scalable background job processing system built with **Node.js**, **Re
 
 ---
 
-## 🎯 Problem Statement
+## � Live Demo
+
+> 🔗 **[View Live Demo](https://async-job-system.vercel.app)** — Try out the job queue system in real time.
+
+---
+
+## �🎯 Problem Statement
 
 In real-world systems, heavy or long-running tasks (emails, reports, payments, etc.) cannot block API responses. This project decouples request handling from background execution using a Redis-backed queue and a worker architecture.
 
@@ -119,20 +125,23 @@ npm run start:worker
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/v1/jobs` | Create a new job |
-| `GET` | `/api/v1/jobs/:id` | Get job status |
-| `POST` | `/api/v1/jobs/:id/retry` | Manually retry a failed job |
-| `GET` | `/api/v1/jobs/dead` | Get list of dead jobs |
+| `POST` | `/api/v1/jobs` | Submit a new job to the queue |
+| `GET` | `/api/v1/jobs` | Retrieve all active jobs |
+| `GET` | `/api/v1/jobs/stats` | Retrieve queue metrics (pending, processing, etc.) |
+| `GET` | `/api/v1/jobs/:id` | Get specific job status |
+| `POST` | `/api/v1/jobs/:id/retry` | Manually retry a dead job |
+| `GET` | `/api/v1/jobs/dead` | Get list of dead jobs in the DLQ |
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Runtime**: Node.js(TypeScript)
+- **Backend Runtime**: Node.js, TypeScript
 - **Framework**: Express.js
-- **Database**: PostgreSQL
-- **Queue**: Redis
-- **Dev Tools**: Nodemon(dev), docker(prod)
+- **Database**: PostgreSQL (Supabase Serverless)
+- **Queue**: Redis (Upstash)
+- **Deployment Orchestration**: Railway (API & Worker), Vercel (Frontend)
+- **Frontend Visualization**: React, Vite, Tailwind CSS
 
 ---
 
@@ -173,6 +182,8 @@ async-job-system/
 │   ├── package.json              # Dependencies and scripts
 │   ├── tsconfig.json             # TypeScript configuration
 │   └── nodemon.json              # Nodemon configuration for auto-reload
+│
+├── Frontend/                     # React dashboard for monitoring workers
 │
 ├── docker-compose.yml            # PostgreSQL + Redis setup
 ├── .env                          # Environment variables
