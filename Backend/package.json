@@ -4,18 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-  "build": "tsc",
-  "start:api": "node dist/index.js",
-  "start:worker": "node dist/worker.js",
-  "dev:api": "nodemon --watch src --exec ts-node src/index.ts",
-  "dev:worker": "nodemon --watch src --exec ts-node src/worker.ts",
-  "start": "concurrently \"npm run start:api\" \"npm run start:worker\""
-},
+    "build": "tsc",
+    "start:api": "node dist/index.js",
+    "start:worker": "node dist/worker.js",
+    "dev:api": "nodemon --watch src --exec ts-node src/index.ts",
+    "dev:worker": "nodemon --watch src --exec ts-node src/worker.ts",
+    "start": "concurrently \"npm run start:api\" \"npm run start:worker\""
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "concurrently": "^9.2.1",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
