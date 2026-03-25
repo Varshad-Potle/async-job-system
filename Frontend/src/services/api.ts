@@ -22,7 +22,7 @@ export interface Stats {
 }
 
 // --- API Client ---
-const API_URL = 'https://async-job-system-api-production.up.railway.app/api/v1';
+const API_URL = 'https://async-job-system.onrender.com';
 
 export const api = {
     // 1. Get all jobs
