@@ -15,7 +15,7 @@ const startServer = async () => {
         console.log("Database Initialized");
 
         // Start HTTP Server
-        const server = app.listen(PORT, () => {
+        const server = app.listen(PORT as number, '0.0.0.0', () => {
             console.log(`Server running on http://localhost:${PORT}`);
         });
 
