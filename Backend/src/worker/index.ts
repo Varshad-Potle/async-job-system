@@ -132,7 +132,8 @@ export async function startWorker() {
 
     while (true) {
         try {
-            const response = await redisBlockingClient.brpop("job_queue", 0);
+            // added 5 second timeout to allow graceful shutdowns and periodic checks for stuck jobs to prevent upstash disconnections
+            const response = await redisBlockingClient.brpop("job_queue", 5);
 
             if (response) {
                 const jobId = response[1];
