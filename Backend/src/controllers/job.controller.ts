@@ -11,8 +11,10 @@ export const createJob = asyncHandler(async (req: Request, res: Response) => {
 
     // validation
     if (!type || !data) {
-        throw new ApiError(HttpStatusCode.BAD_REQUEST, "Job 'type' and 'data' are required")
+        throw new ApiError(HttpStatusCode.BAD_REQUEST, "Job 'type' and 'data' are required");
     }
+
+    let createdJobId: string | null = null; // Declare outside so catch block can access it
 
     try {
         // create a permanent record in db
@@ -28,8 +30,10 @@ export const createJob = asyncHandler(async (req: Request, res: Response) => {
         const newJob = result.rows[0];
 
         if (!newJob) {
-            throw new ApiError(HttpStatusCode.INTERNAL_SERVER_ERROR, "Failed to create job")
+            throw new ApiError(HttpStatusCode.INTERNAL_SERVER_ERROR, "Failed to create job");
         }
+
+        createdJobId = newJob.id; // Store ID for potential rollback
 
         // add job to redis
         await redisClient.lpush("job_queue", String(newJob.id));
@@ -39,7 +43,13 @@ export const createJob = asyncHandler(async (req: Request, res: Response) => {
             new ApiResponse(HttpStatusCode.CREATED, { jobId: newJob.id }, "Job submitted successfully!")
         );
     } catch (error) {
-        // if redis fails, we might want to delete the DB record (simple rollback)
+        // ACTUAL ROLLBACK: If Redis fails, delete the stuck DB record
+        if (createdJobId) {
+            console.warn(`⚠️ Redis failed. Rolling back job ${createdJobId} from database.`);
+            await pool.query(`DELETE FROM jobs WHERE id = $1`, [createdJobId])
+                .catch(err => console.error("Rollback failed:", err)); // Don't crash if rollback also fails
+        }
+        
         throw error;
     }
 });

@@ -8,9 +8,15 @@ dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 // Base options needed for worker queue logic
 const baseOptions: RedisOptions = {
     maxRetriesPerRequest: null,
+    family: 4, 
+    enableReadyCheck: false,
     retryStrategy: (times: number) => {
-        const delay = Math.min(times * 50, 2000);
-        return delay;
+        console.log(`[Redis] Retrying connection... (Attempt ${times})`);
+        return Math.min(times * 100, 3000); // Max wait of 3 seconds between retries
+    },
+    reconnectOnError: (err) => {
+        console.warn(`[Redis] Reconnecting after error: ${err.message}`);
+        return true; // Force ioredis to actively reconnect on ANY error
     }
 };
 
