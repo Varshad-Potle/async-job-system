@@ -10,6 +10,8 @@ const baseOptions: RedisOptions = {
     maxRetriesPerRequest: null,
     family: 4, 
     enableReadyCheck: false,
+    enableOfflineQueue: false, // Prevents ghost pending jobs
+    tls: { rejectUnauthorized: false }, 
     retryStrategy: (times: number) => {
         console.log(`[Redis] Retrying connection... (Attempt ${times})`);
         return Math.min(times * 100, 3000); // Max wait of 3 seconds between retries
