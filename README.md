@@ -4,13 +4,13 @@ A robust, scalable background job processing system built with **Node.js**, **Re
 
 ---
 
-## � Live Demo
+##  Live Demo
 
 > 🔗 **[View Live Demo](https://async-job-system.vercel.app)** — Try out the job queue system in real time.
 
 ---
 
-## �🎯 Problem Statement
+## 🎯 Problem Statement
 
 In real-world systems, heavy or long-running tasks (emails, reports, payments, etc.) cannot block API responses. This project decouples request handling from background execution using a Redis-backed queue and a worker architecture.
 
